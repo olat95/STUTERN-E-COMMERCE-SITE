@@ -1,5 +1,5 @@
 import styled from 'styled-components'
-import { mobile } from '../../responsive'
+import { mobile } from '../../responsive.js'
 
 export const Container = styled.div`
   display: flex;

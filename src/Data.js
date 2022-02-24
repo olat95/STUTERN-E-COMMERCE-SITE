@@ -38,25 +38,29 @@ export const categories = [
     id: 1,
     img: '/images/image-6.jpg',
     title: 'SHIRT STYLE',
+    cat: 'women',
   },
   {
     id: 2,
     img: '/images/image-7.jpg',
     title: 'WINTER STYLE',
+    cat: 'men',
   },
   {
     id: 3,
     img: '/images/image-8.jpg',
     title: 'AUTUMN STYLE',
+    cat: 'coat',
   },
   {
     id: 4,
     img: '/images/image-9.jpg',
     title: 'PLUS SIZE STYLE',
+    cat: 'shoe',
   },
 ]
 
-export const products = [
+export const trendingProducts = [
   {
     id: 1,
     img: '/images/image-11.png',

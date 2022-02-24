@@ -3,9 +3,16 @@ import styled from 'styled-components'
 import Navbar from '../components/Navbar/Navbar'
 import Announcement from '../components/Announcement'
 import Footer from '../components/Footer'
-import { Cartitems } from '../Data'
 import { Add, Remove } from '@material-ui/icons'
 import { mobile } from '../responsive'
+import StripeCheckout from 'react-stripe-checkout'
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { useHistory } from 'react-router'
+import { useSelector } from 'react-redux'
+
+const KEY =
+  'pk_test_51JvZcHBPS9JVM5wtjDW2vFczdlNknwE2cUmTgQ8ZxTklWz25vSFLee7eNzOAXDe4NVh8fTfg0KVqNn6g0Q4oAyYI00jd1Fl8cF'
 
 const Container = styled.div``
 const Wrapper = styled.div`
@@ -156,6 +163,31 @@ const SummaryButton = styled.button`
 `
 
 const Cart = () => {
+  const cart = useSelector((state) => state.cart)
+  const history = useHistory()
+
+  const [stripeToken, setStripeToken] = useState(null)
+
+  const onToken = (token) => {
+    setStripeToken(token)
+  }
+
+  useEffect(() => {
+    const makeRequest = async () => {
+      try {
+        const res = await axios.post(
+          'https://localhost:5000/api/checkout/payment',
+          { tokenId: stripeToken.id, amount: 2000 }
+        )
+
+        history.push('/success', { stripeData: res.data, products: cart })
+      } catch (err) {
+        console.log(err)
+      }
+    }
+    stripeToken && makeRequest()
+  }, [stripeToken, cart, cart.totalPrice, history])
+
   return (
     <Container>
       <Navbar />
@@ -172,34 +204,36 @@ const Cart = () => {
         </Top>
         <Bottom>
           <Info>
-            {Cartitems.map((item) => (
+            {cart.products.map((product) => (
               <>
                 <Product>
                   <ProductDetails>
-                    <Image src={item.img} key={item.id} />
+                    <Image src={product.img} key={product.id} />
                     <Details>
                       <ProductName>
                         <b>Product:</b>
-                        {item.productname}
+                        {product.title}
                       </ProductName>
                       <ProductId>
                         <b>ID:</b>
-                        {item.productid}
+                        {product._id}
                       </ProductId>
-                      <ProductColor color={item.productcolor} />
+                      <ProductColor color={product.color} />
                       <ProductSize>
                         <b>Size:</b>
-                        {item.productsize}
+                        {product.size}
                       </ProductSize>
                     </Details>
                   </ProductDetails>
                   <PriceDetails>
                     <ProductAmountContainer>
                       <Add />
-                      <ProductAmount>{item.productamount}</ProductAmount>
+                      <ProductAmount>{product.quantity}</ProductAmount>
                       <Remove />
                     </ProductAmountContainer>
-                    <ProductPrice>{item.productprice}</ProductPrice>
+                    <ProductPrice>
+                      {product.price * product.quantity}
+                    </ProductPrice>
                   </PriceDetails>
                 </Product>
                 <Line />
@@ -209,22 +243,37 @@ const Cart = () => {
           <Summary>
             <SummaryTitle>ORDER SUMMARY</SummaryTitle>
             <SummaryItem>
-              <SummaryItemText>Subtotal:</SummaryItemText>
-              <SummaryItemPrice>N40,000</SummaryItemPrice>
+              <SummaryItemText>SubPrice:</SummaryItemText>
+              <SummaryItemPrice>$ {cart.totalPrice}</SummaryItemPrice>
             </SummaryItem>
             <SummaryItem>
               <SummaryItemText>Estimated Shipping:</SummaryItemText>
-              <SummaryItemPrice>N5,000</SummaryItemPrice>
+              <SummaryItemPrice>$2.99</SummaryItemPrice>
             </SummaryItem>
             <SummaryItem>
               <SummaryItemText>Shipping Discount:</SummaryItemText>
-              <SummaryItemPrice>-N5,000</SummaryItemPrice>
+              <SummaryItemPrice>-$2.99</SummaryItemPrice>
             </SummaryItem>
             <SummaryItem type='total'>
               <SummaryItemText>Total:</SummaryItemText>
-              <SummaryItemPrice>N40,000</SummaryItemPrice>
+              <SummaryItemPrice>$ {cart.totalPrice}</SummaryItemPrice>
             </SummaryItem>
-            <SummaryButton>CHECKOUT NOW</SummaryButton>
+            {stripeToken ? (
+              <span>Processing, Please wait....</span>
+            ) : (
+              <StripeCheckout
+                name='STUTERN..'
+                image=''
+                billingAddress
+                shippingAddress
+                description={`your total is $${cart.totalPrice}`}
+                amount={cart.totalPrice * 100}
+                token={onToken}
+                stripeKey={KEY}
+              >
+                <SummaryButton>CHECKOUT NOW</SummaryButton>
+              </StripeCheckout>
+            )}
           </Summary>
         </Bottom>
       </Wrapper>
